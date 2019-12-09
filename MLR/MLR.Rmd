@@ -1,12 +1,153 @@
 ---
-title: "Multiple Linear Regression"
+title: "Multiple Linear Regression: an Introduction"
 author: "Collin Dabbieri"
 date: "12/9/2019"
-output: html_document
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+# Motivation
+
+
+# Simple Linear Regression
+
+In order to understand multiple linear regression, it's useful to first examine a simpler case. Let's imagine we have n data points, with a response y to be modelled by 1 independent variable, $x_1$. Let's further assume that y is well modelled by a straight line.
+
+
+```{r,echo=FALSE}
+set.seed(20)
+
+n=10
+k=1
+
+m_true=1.5
+b_true=3.0
+
+e=rnorm(10,0,1)
+x1=seq(1:10)
+ones=rep(1,10)
+y=m_true%*%x1+b_true%*%ones+e
+plot(x1,y)
+
+X=matrix(,nrow=n,ncol=k+1)
+X[,1]=1
+X[,2]=x1
+Y=matrix(y,nrow=n,ncol=1)
+
+betahat=solve(t(X)%*%X)%*%t(X)%*%Y
+
+yhat=X%*%betahat
+lines(x1,yhat,type='l',col='red')
+
+
+```
+
+There is some error in our response so the data points are not perfectly modelled by the straight line. For any individual point, we can say
+
+$$y_i=(mx_i+b)+\epsilon_i$$
+
+Where m is the slope of our line of fit and b is the intercept. $mx_i+b$ gives the location of our model fit and $\epsilon_i$ gives the error
+
+
+```{r,echo=FALSE}
+plot(x1,y)
+lines(x1,yhat,type='l')
+
+for(i in 1:n){
+  x_val=x1[i]
+  y_model=betahat[2]*x_val+betahat[1]
+  y_true=y[i]
+  
+  lines(c(x_val,x_val),c(0,y_model),type='l',col='red')
+  lines(c(x_val+0.2,x_val+0.2),c(y_model,y_true),type='l',col='blue')
+}
+```
+
+Now in reality y, $x_1$, and $\epsilon$ are vectors with n values, we can express them as such
+
+$$
+\begin{matrix}
+[ & y_1 & ] & & & [&x_{11}&]& & &[& 1 &]& &[&\epsilon_1&] \\
+[ & y_2 & ] & & & [&x_{12}&]& & &[& 1 &]& &[&\epsilon_2&] \\
+[ & ... & ] &=&m& [&  ... &]&+&b&[&...&]&+&[&...&] \\
+[ & y_n & ] & & & [&x_{1n}&]& & &[& 1 &]& &[&\epsilon_n&] \\
+\end{matrix}
+$$
+
+Notice that we multiplied b by a vector of 1's. It's still true that $y_i=mx_i+b+\epsilon_i$ for all i.
+
+Now bear with me as I change some variables and move things around
+
+$$
+\begin{matrix}
+[ & y_1 & ] & & & [&1&]& & &[& x_{11} &]& &[&\epsilon_1&] \\
+[ & y_2 & ] & & & [&1&]& & &[& x_{12} &]& &[&\epsilon_2&] \\
+[ & ... & ] &=&\beta_0& [&  ... &]&+&\beta_1&[&...&]&+&[&...&] \\
+[ & y_n & ] & & & [&1&]& & &[& x_{1n} &]& &[&\epsilon_n&] \\
+\end{matrix}
+$$
+
+All we've done is changed b to $\beta_0$, changed m to $\beta_1$, and switched their order. This form can be easily generalized to the case with multiple independent variables predicting the response y.
+
+# MLR
+
+## Basics
+
+Lets look at a situation where we have 2 independent variables, $x_1$ and $x_2$ predicting the response, y
+
+```{r,echo=FALSE}
+library(rgl)
+axes3d()
+n=10
+k=2
+x1=c(6,4,2,5,9,2,5,4,9,5)
+x2=c(3,5,2,6,8,10,11,16,12,10)
+e=rnorm(10,0,2.0)
+
+b0_true=2
+b1_true=0.5
+
+y=b0_true%*%x1+b1_true%*%x2+e
+
+
+X=matrix(,nrow=n,ncol=k+1)
+X[,1]=1
+X[,2]=x1
+X[,3]=x2
+
+Y=matrix(y,nrow=n,ncol=1)
+
+betahat=solve(t(X)%*%X)%*%t(X)%*%Y
+yhat=X%*%betahat
+
+model=lm(Y~X[,-1])
+
+pointQ=c(x1[1],x2[1],yhat[1])
+pointR=c(x1[2],x2[2],yhat[2])
+pointS=c(x1[3],x2[3],yhat[3])
+QR=matrix(pointR-pointQ,nrow=3,ncol=1)
+RS=matrix(pointS-pointR,nrow=3,ncol=1)
+
+normal=c(QR[2]*RS[3]-QR[3]*RS[2],QR[3]*RS[1]-QR[1]*RS[3],QR[1]*RS[2]-QR[2]*RS[1])
+
+
+plot3d(x1,x2,y)
+planes3d(normal[1],normal[2],normal[3],0,alpha=0.5,color="blue")
+
+
+
+rglwidget()
+```
+
+
+
+
 
 

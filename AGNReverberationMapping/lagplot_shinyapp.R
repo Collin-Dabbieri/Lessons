@@ -62,7 +62,9 @@ server <- function(input,output){
     
     ggplot()+
       geom_line(aes(xL,FHb_interp),colour='red')+
-      geom_line(aes(xC_plot,Fc_interp),colour='blue')
+      geom_line(aes(xC_plot,Fc_interp),colour='blue')+
+      xlab("HJD")+
+      ylab("Flux (normalized)")
     
   })
   

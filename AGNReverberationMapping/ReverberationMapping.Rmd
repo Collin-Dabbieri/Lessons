@@ -141,7 +141,7 @@ shinyAppFile("lagplot_shinyapp.R")
 
 ```
 
-
+# Black Hole Masses
 
 The AGN black hole mass database has compiled all published spectroscopic reverberation mapping studies of active galaxies
 
@@ -157,22 +157,71 @@ head(mbh)
 hist(mbh$logMBH)
 ```
 
-
-
-\newpage
-
-\newpage
-
-
-
-
-
-
-
-
-
+# Template shiny application
 
 ```{r}
+library(shiny)
+
+shinyApp(
+
+  ui <- fluidPage(
+    
+    # App title 
+    titlePanel("Template"),
+    
+    #Sidebar layout with input and output
+    sidebarLayout(
+      
+      #sidebar panel for inputs
+      sidebarPanel(
+        
+        #Input: Slider for tau
+        sliderInput(inputId="tau",
+                    label="lag:",
+                    min=0,
+                    max=6.28,
+                    value=0)),
+      
+      #Main panel for displaying outputs
+      mainPanel(
+        plotOutput("sinPlot")
+  
+      )
+      
+      
+    )
+    
+  ),
+  
+  ## Server
+  
+  # Define a server function for the Shiny app
+  
+  server <- function(input,output){
+    
+    output$sinPlot <- renderPlot({
+      #plotting sin(x-tau)
+      
+      x=seq(-2*pi,2*pi,length.out=50)
+      y1=sin(x-input$tau)
+
+      
+      ggplot()+
+        geom_line(aes(x,y1),colour='red')
+
+  
+    })
+    
+
+      
+      
+    }
+)
+
+```
+
+
+```{r,echo=F,eval=F}
 
 CCF<-function(C,L,lagmax){
   
@@ -192,7 +241,7 @@ CCF<-function(C,L,lagmax){
     
     sum=0
 
-    for(i in tau:N){
+    for(i in lagmax:N){
       index=i-tau
       #print(L[j])
       #print(C[index])

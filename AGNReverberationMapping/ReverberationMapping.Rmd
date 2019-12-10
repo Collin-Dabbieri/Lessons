@@ -82,4 +82,3 @@ shinyAppFile("sincos_shinyapp.R")
 
 
 
-

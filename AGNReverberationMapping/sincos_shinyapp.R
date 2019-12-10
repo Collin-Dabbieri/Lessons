@@ -77,7 +77,7 @@ server <- function(input,output){
          xlim=c(0,2*pi),
          ylim=c(-1,1)
          )
-    lines(lags,ccfs)
+    #lines(lags,ccfs)
     lines(c(-2*pi,2*pi),c(0,0))
     
     

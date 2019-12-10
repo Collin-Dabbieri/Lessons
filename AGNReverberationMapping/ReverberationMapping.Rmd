@@ -77,8 +77,148 @@ shinyAppFile("sincos_shinyapp.R")
 
 
 
+We have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
+
+$$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
+
+This method assumes evenly sampled time data, which is nearly impossible to achieve, so we can interpolate our light curves onto evenly sampled time intervals.
+
+Let's look at our data
 
 
+```{r}
+Continuum=read.table("Continuum.txt")
+colnames(Continuum)=c("HJD","Obs","Flux","eFlux")
+head(Continuum)
+```
+
+
+```{r}
+Emission=read.table("Emission.txt")
+colnames(Emission)=c("HJD","FHb","eFHb","FHeII","eFHeII")
+head(Emission)
+```
+
+
+```{r}
+normalize <- function(x) {
+    return ((x - min(x)) / (max(x) - min(x)))
+  }
+```
+
+
+
+```{r}
+library(ggplot2)
+ggplot()+
+  geom_line(aes(HJD,normalize(Flux)),data=Continuum)+
+  geom_line(aes(HJD,normalize(FHb)),data=Emission)
+```
+
+
+Now we can interpolate onto evenly sampled time bins
+
+```{r}
+xL=seq(min(Emission$HJD),max(Emission$HJD),length.out=length(Emission$HJD))
+xC=seq(min(Continuum$HJD),max(Continuum$HJD),length.out=length(Continuum$HJD))
+temp=approx(Emission$HJD,normalize(Emission$FHb),xL)
+FHb_interp=temp$y
+temp=approx(Continuum$HJD,normalize(Continuum$Flux),xC)
+Fc_interp=temp$y
+
+ggplot()+
+  geom_line(aes(xC,Fc_interp))+
+  geom_line(aes(xL,FHb_interp))
+```
+
+
+Let's plot our continuum and emission light curves with variable lag value
+
+```{r,echo=FALSE}
+library(shiny)
+
+shinyAppFile("lagplot_shinyapp.R")
+
+```
+
+
+
+The AGN black hole mass database has compiled all published spectroscopic reverberation mapping studies of active galaxies
+
+
+```{r}
+mbh=read.csv("MBH_edit.csv",sep=",",header=F)
+colnames(mbh)=c("Name","RA","Dec","redshift","logMBH","+elogMBH","-elogMBH")
+head(mbh)
+```
+
+
+```{r}
+hist(mbh$logMBH)
+```
+
+
+
+\newpage
+
+\newpage
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+CCF<-function(C,L,lagmax){
+  
+  num_lags=lagmax
+  N=length(C)
+
+  sigmaC=sd(C)
+  sigmaL=sd(L)
+  Cbar=mean(C)
+  Lbar=mean(L)
+  
+  ccf_out=c()
+  lags=c()
+  for(tau in 1:lagmax){
+    
+
+    
+    sum=0
+
+    for(i in tau:N){
+      index=i-tau
+      #print(L[j])
+      #print(C[index])
+      val=(L[i]-Lbar)*(C[index]-Cbar)/(sigmaC*sigmaL)
+      #print(val)
+      sum=sum+val
+      #print(sum)
+      
+    }
+    #print(sum)
+    ccf_out=append(ccf_out,sum)
+    lags=append(lags,tau)
+    
+    
+  }
+  
+  return(list(lags=lags,CCF=ccf_out))
+  
+}
+
+obj=CCF(Fc_interp,FHb_interp,60)
+obj
+
+#plot(obj$lags,obj$CCF)
+
+```
 
 
 

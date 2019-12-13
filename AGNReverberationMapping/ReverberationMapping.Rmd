@@ -25,6 +25,30 @@ Quasars are the most luminous objects in the universe. They're so bright that we
 
 ![Quasar Diagram](./agn_model.gif){width=300, height=400px}
 
+The continuum light from the accretion disk emits like the sum of many blackbodies at different temperatures, and in practice is modelled as a power-law. The broad line region is illuminated by the accretion disk and gives off broad emission lines. An example synthetic spectrum is given below.
+
+![Quasar Spectrum](./Emission_Spectrum.png){width=300, height=400px}
+
+
+## Galaxy Feedback
+
+There's a well-known correlation between the mass of a galaxy's spheroidal component and the mass of the supermassive black hole at its center. For an elliptical galaxy, the spheroid is the whole galaxy, and for a spiral galaxy the spheroid is the central bulge. A plot illustrating this correlation is given below
+
+![Gultekin et al. 2009 ApJ 698 198](./msigma.png){width=300, height=400px}
+
+
+This is known as the M-$\sigma$ relation. The x-axis is the host galaxy's velocity dispersion, an analogue for its mass. The y-axis is the mass of the supermassive black hole at the center of the host galaxy. This correlation implies some coevolution mechanism between the supermassive black hole and its host galaxy. The source of this mechanism is an important area of active research.
+
+## Reverberation Mapping
+
+One of the ways we can constrain the mass of the supermassive black hole is through AGN reverberation mapping. Because gas in the broad line region orbits the black hole with keplerian velocities, we can use properties of the broad line region to constrain the black hole mass. To achieve this we need to calculate two things, a characteristic radius of the broad line region, and the velocity dispersion of the gas at that radius. If we can constrain these two values, our supermassive black hole mass can be given by the following equation.
+
+$$M_{BH}=f\frac{Rv^2}{G}$$
+
+Where R is the radius of the broad line region and $v$ is the characteristic velocity. $f$ is a parameter that takes in to account things like the inclination of the accretion disc and the geometry of the broad line region. In practice, we are usually not able to constrain these values for an individual quasar, for reasons we'll discuss below, and so average $f$ values are determined. $<f>$ can actually be calculated from the M-$\sigma$ relation above. Reverberation mapping is not the only way to constrain the mass of a supermassive black hole, so we can use the line of best fit for M-$\sigma$ values determined through other means to constrain our $<f>$ for reverberation mapped objects. The next few sections will discuss how we determine the radius and velocity of the broad line region.
+
+## Constraining the Radius
+
 The broad line region contains clouds of gas orbiting the supermassive black hole with Keplerian velocities. This gas is illuminated by the continuum from the accretion disk and manifests itself through emission lines in quasar spectra.
 
 Quasars have been observed to have significant variability in their continua. Because the broad line region is illuminated by the continuum source, variability in the continuum will cause variability in the emission lines. However, the variability in the emission lines will lag behind the variability in the continuum source, as it takes light time to travel from the accretion disk to the broad line region. By probing the time lag between the variability in the continuum and the variability in the emission lines, we can derive an estimate for the distance from the accretion disk to the broad line region.
@@ -39,13 +63,10 @@ While we consider the accretion disk to be small enough to ignore variations in 
 
 ![Reverberation Mapping Diagram](./ReverberationMapping.png){width=400,height=400px}
 
-When we pick out some emission line, like $H\beta$ and use that, along with the continuum, to measure $\tau$, we are measuring the $H\beta$ weighted average light travel time. 
 
-## Transfer Function
+### Transfer Function
 
-If we measure the strength of our emission line over time, L(t), and our continuum over time C(t). We can determine the best lag to model them.
-
-There's a difficulty here though, continuum light travels straight to the observer. The emission light will always take longer to reach the observer than the continuum light, but, depending on where it interacts with the broad line region, it can take any amount of time longer to reach the observer.
+When we pick out some emission line, like $H\beta$ and use that, along with the continuum, to measure $\tau$, we are measuring the $H\beta$ emission weighted average light travel time. Continuum light travels straight to the observer. The emission light will always take longer to reach the observer than the continuum light, but, depending on where it interacts with the broad line region, it can take any amount of time longer to reach the observer.
 
 
 ![Emission Lag](./TransferFunction.png){width=300,height=300px}
@@ -55,14 +76,14 @@ We can see how there needs to be some term that gives us information about the g
 $$L(t)=\int_{-\infty}^{\infty}\Psi(\tau)C(t-\tau)d\tau$$
 
 
-We can think of this as the weighted average of the continuum light curve given the geometry of the broad line region. Ideally, the measurement of L(t) and C(t) would allow us to gain some information about the geometry of the broad line region. However, there are many reasons why this ends up being quite difficult (ex. White and Peterson 1994).
+We can think of this as the weighted average of the continuum light curve given the geometry of the broad line region. More exactly, the transfer function represents the broad line region's response to a $\delta$ function outburst, as observed from far away. Ideally, the measurement of L(t) and C(t) would allow us to gain some information about the geometry of the broad line region. However, there are many reasons why this ends up being quite difficult (ex. White and Peterson 1994).
 
 In practice the transfer function is often ignored, and it is accepted that black hole masses may be uncertain to a factor of ~ 2. Even considering the transfer function, you would still see a lag value of $\tau=\frac{R}{c}$ for both a thin spherical shell of radius R and a thin ring of radius R at any inclination! (White and Peterson 1994).
 
 
-## Finding the Lag
+### Finding the Lag
 
-In order to compute the lag time we use the cross correlation function. Cross correlation gives a measure of the similarity of two series as a function of the displacement of one relative to the other.
+In order to compute the lag time, we use the cross correlation function. Cross correlation gives a measure of the similarity of two series as a function of the displacement of one relative to the other.
 
 $$F_{CCF}(\tau)=\int_{-\infty}^{\infty}L(t)C(t-\tau)dt$$
 
@@ -75,13 +96,37 @@ shinyAppFile("sincos_shinyapp.R")
 
 ```
 
+The cross correlation function reaches its maximum at a delay of $3\pi/2$, when the two functions are identical. Similarly, we can plot our continuum and emission light curves with a delay and find the lag time with the maximum cross correlation function value.
 
 
-We have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
+However, we have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
 
 $$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
 
-This method assumes evenly sampled time data, which is nearly impossible to achieve, so we can interpolate our light curves onto evenly sampled time intervals.
+This method assumes evenly sampled time data, which is nearly impossible to achieve, so we can interpolate our light curves onto evenly sampled time intervals. 
+
+```{r,echo=FALSE}
+library(shiny)
+
+shinyAppFile("lagplot_shinyapp.R")
+
+```
+
+Once we've used the cross correlation function to pick out our ideal lag time, we can determine the radius of the broad line region with 
+
+$$R=\tau c$$
+
+## Constraining the Velocity
+
+We determine the velocity dispersion of the broad line region by fitting a single-epoch emission line for its velocity width. It's important to remember that we must use the same emission line that we used to constrain the radius, so we're probing the same region of the gas in the broad line region. Often these values are measured with the H$\beta$ emission line.
+
+
+
+
+
+# Computation
+
+## Constraining the radius
 
 Let's look at our data
 
@@ -98,6 +143,8 @@ Emission=read.table("Emission.txt")
 colnames(Emission)=c("HJD","FHb","eFHb","FHeII","eFHeII")
 head(Emission)
 ```
+
+We'll want to normalize the flux values so they can be properly compared.
 
 
 ```{r}
@@ -141,6 +188,64 @@ shinyAppFile("lagplot_shinyapp.R")
 
 ```
 
+Now let's make a method for calculating the discrete cross correlation function
+
+$$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
+
+
+```{r,echo=F,eval=F}
+
+CCF<-function(C,L,lagmax){
+  
+  num_lags=lagmax
+  N=length(C)
+
+  sigmaC=sd(C)
+  sigmaL=sd(L)
+  Cbar=mean(C)
+  Lbar=mean(L)
+  
+  ccf_out=c()
+  lags=c()
+  for(tau in 1:lagmax){
+    
+
+    
+    sum=0
+
+    for(i in lagmax:N){
+      index=i-tau
+      #print(L[j])
+      #print(C[index])
+      val=(L[i]-Lbar)*(C[index]-Cbar)/(sigmaC*sigmaL)
+      #print(val)
+      sum=sum+val
+      #print(sum)
+      
+    }
+    #print(sum)
+    ccf_out=append(ccf_out,sum)
+    lags=append(lags,tau)
+    
+    
+  }
+  
+  return(list(lags=lags,CCF=ccf_out))
+  
+}
+
+obj=CCF(Fc_interp,FHb_interp,60)
+obj
+
+#plot(obj$lags,obj$CCF)
+
+```
+
+
+
+## Constraining the Velocity
+
+
 # Black Hole Masses
 
 The AGN black hole mass database has compiled all published spectroscopic reverberation mapping studies of active galaxies
@@ -158,6 +263,8 @@ hist(mbh$logMBH)
 ```
 
 # Template shiny application
+
+Use this template to develop your own interactive applications
 
 ```{r}
 library(shiny)
@@ -221,53 +328,21 @@ shinyApp(
 ```
 
 
-```{r,echo=F,eval=F}
+# Conclusions
 
-CCF<-function(C,L,lagmax){
-  
-  num_lags=lagmax
-  N=length(C)
 
-  sigmaC=sd(C)
-  sigmaL=sd(L)
-  Cbar=mean(C)
-  Lbar=mean(L)
-  
-  ccf_out=c()
-  lags=c()
-  for(tau in 1:lagmax){
-    
 
-    
-    sum=0
+## Questions to Ponder
 
-    for(i in lagmax:N){
-      index=i-tau
-      #print(L[j])
-      #print(C[index])
-      val=(L[i]-Lbar)*(C[index]-Cbar)/(sigmaC*sigmaL)
-      #print(val)
-      sum=sum+val
-      #print(sum)
-      
-    }
-    #print(sum)
-    ccf_out=append(ccf_out,sum)
-    lags=append(lags,tau)
-    
-    
-  }
-  
-  return(list(lags=lags,CCF=ccf_out))
-  
-}
+Consider using this notebook as a means of answering these questions for yourself.
 
-obj=CCF(Fc_interp,FHb_interp,60)
-obj
+1. Would we be able to perform our analysis for a quasar that was 100 times brighter? How long might the lag be?
 
-#plot(obj$lags,obj$CCF)
+2. 
 
-```
+...
+
+
 
 
 

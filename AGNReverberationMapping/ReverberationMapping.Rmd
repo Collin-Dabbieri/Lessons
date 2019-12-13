@@ -1,12 +1,16 @@
+
+
 ---
 title: "AGN Reverberation Mapping"
 author: "Collin Dabbieri"
-output: 
+output:
   html_document:
+    css: mystyle.css
     toc: yes
     toc_float: yes
-
-
+  pdf_document:
+    toc: yes
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -15,11 +19,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Abstract
 
-There is a well-known strong correlation between the mass of a supermassive black hole and the velocity dispersion of its host galaxy’s bulge, known as the M-$\sigma$ relation. This can not be explained through a direct relationship as the radius of gravitational influence of the black hole is much smaller than the radius of the host galaxy’s bulge. This suggests that there is some other form of feedback between the supermassive black hole and its host galaxy. The source of this feedback is unknown and an area of much active research. One way that these black hole masses are calculated is through reverberation mapping techniques.
+  There is a well-known strong correlation between the mass of a supermassive black hole and the velocity          dispersion of its host galaxy’s bulge, known as the M-$\sigma$ relation. This can not be explained through a direct relationship as the radius of gravitational influence of the black hole is much smaller than the radius of the host galaxy’s bulge. This suggests that there is some other form of feedback between the supermassive black hole and its host galaxy. The source of this feedback is unknown and an area of much active research. One way that these black hole masses are calculated is through reverberation mapping techniques.
+  
+  The purpose of this computational exercise is to help students understand reverberation mapping. After completion of the project students will understand the purpose of a transfer function, they will be comfortable fitting reverberation mapping data with a time lag, and they will be comfortable fitting emission lines for their velocity width.
+  
+  The exercise begins with background information on reverberation mapping. Graphics are provided to instill visual understanding of a quasar’s accretion disk and broad line region. Continuum and Hβ light curves are provided, along with an interactive plotting tool that plots the continuum and emission light curves, as well as the cross correlation for different lag values. Once the time lag is extracted, the radius of the broad line region is determined. Next, students will use a spectral fitting tool to fit the rest frame optical spectrum to determine the Keplerian velocity. Once velocity and radius are determined, the black hole mass can be calculated.
 
-The purpose of this computational exercise is to help students understand reverberation mapping. After completion of the project students will understand the purpose of a transfer function, they will be comfortable fitting reverberation mapping data with a time lag, and they will be comfortable fitting emission lines for their velocity width.
-
-The exercise begins with background information on reverberation mapping. Graphics are provided to instill visual understanding of a quasar’s accretion disk and broad line region. Continuum and Hβ light curves are provided, along with an interactive plotting tool that plots the continuum and emission light curves, as well as the cross correlation for different lag values. Once the time lag is extracted, the radius of the broad line region is determined. Next, students will use a spectral fitting tool to fit the rest frame optical spectrum to determine the Keplerian velocity. Once velocity and radius are determined, the black hole mass can be calculated.
 
 # Additional Information
 
@@ -35,7 +40,8 @@ Course Level: First Year of College, Beyond First Year
 
 Author: Collin Dabbieri
 
-Email: cdabbieri@gmail.com
+This HTML is published online at collin-dabbieri.github.io/Lessons/
+
 
 # Learning Goals
 
@@ -61,16 +67,16 @@ The continuum light from the accretion disk emits like the sum of many blackbodi
 
 # Galaxy Feedback
 
-There's a well-known correlation between the mass of a galaxy's spheroidal component and the mass of the supermassive black hole at its center. For an elliptical galaxy, the spheroid is the whole galaxy, and for a spiral galaxy the spheroid is the central bulge. A plot illustrating this correlation is given below
+There's a well-known correlation between the mass of a galaxy's spheroidal component and the mass of the supermassive black hole at its center. For an elliptical galaxy, the spheroid is the whole galaxy, and for a spiral galaxy the spheroid is the central bulge. A plot illustrating this correlation is given below (@Gultekin_2009).
 
-![Gultekin et al. 2009 ApJ 698 198](./msigma.png){width=300, height=400px}
+![](./msigma.png){width=300, height=400px}
 
 
 This is known as the M-$\sigma$ relation. The x-axis is the host galaxy's velocity dispersion, an analogue for its mass. The y-axis is the mass of the supermassive black hole at the center of the host galaxy. This correlation implies some coevolution mechanism between the supermassive black hole and its host galaxy. The source of this mechanism is an important area of active research.
 
 # Reverberation Mapping
 
-One of the ways we can constrain the mass of the supermassive black hole is through AGN reverberation mapping. Because gas in the broad line region orbits the black hole with keplerian velocities, we can use properties of the broad line region to constrain the black hole mass. To achieve this we need to calculate two things, a characteristic radius of the broad line region, and the velocity dispersion of the gas at that radius. If we can constrain these two values, our supermassive black hole mass can be given by the following equation.
+One of the ways we can constrain the mass of the supermassive black hole is through AGN reverberation mapping. Because gas in the broad line region orbits the black hole with Keplerian velocities, we can use properties of the broad line region to constrain the black hole mass. To achieve this we need to calculate two things, a characteristic radius of the broad line region, and the velocity dispersion of the gas at that radius. If we can constrain these two values, our supermassive black hole mass can be given by the following equation.
 
 $$M_{BH}=f\frac{Rv^2}{G}$$
 
@@ -100,14 +106,14 @@ When we pick out some emission line, like $H\beta$ and use that, along with the 
 
 ![Emission Lag](./TransferFunction.png){width=300,height=300px}
 
-We can see how there needs to be some term that gives us information about the geometry of the broad line region, otherwise we would have no idea what radius we were probing. We call this term the transfer function, $\Psi(\tau)$, and it's defined such that the emission light curve, L(t), is the convolution of the transfer function and the continuum light curve, C(t)
+When we observe a light curve for an emission line at a given time, we are observing light that could have been emitted by the accretion disk for all positive time delays. We can see how there needs to be some term that gives us information about the geometry of the broad line region, otherwise we would have no idea what radius we were probing. We call this term the transfer function, $\Psi(\tau)$, and it's defined such that the emission light curve, L(t), is the convolution of the transfer function and the continuum light curve, C(t)
 
 $$L(t)=\int_{-\infty}^{\infty}\Psi(\tau)C(t-\tau)d\tau$$
 
 
-We can think of this as the weighted average of the continuum light curve given the geometry of the broad line region. More exactly, the transfer function represents the broad line region's response to a $\delta$ function outburst, as observed from far away. Ideally, the measurement of L(t) and C(t) would allow us to gain some information about the geometry of the broad line region. However, there are many reasons why this ends up being quite difficult (ex. White and Peterson 1994).
+We can think of this as the weighted average of the continuum light curve given the geometry of the broad line region. More exactly, the transfer function represents the broad line region's response to a $\delta$ function outburst, as observed from far away. Ideally, the measurement of L(t) and C(t) would allow us to gain some information about the geometry of the broad line region. However, there are many reasons why this ends up being quite difficult. Most importantly, we are often limited by the amount of data available (@White_1994).
 
-In practice the transfer function is often ignored, and it is accepted that black hole masses may be uncertain to a factor of ~ 2. Even considering the transfer function, you would still see a lag value of $\tau=\frac{R}{c}$ for both a thin spherical shell of radius R and a thin ring of radius R at any inclination! (White and Peterson 1994).
+In practice the transfer function is often ignored, and it is accepted that black hole masses may be uncertain to a factor of ~ 2. Even considering the transfer function, you would still see a lag value of $\tau=\frac{R}{c}$ for both a thin spherical shell of radius R and a thin ring of radius R at any inclination! (@White_1994).
 
 
 ### Finding the Lag
@@ -120,7 +126,7 @@ Let's examine the CCF for sin(x) and cos(x)
 
 ![](./singif_screenshots/sinplots.gif){width=300,height=300px}
 
-NOTE: I've embedded a gif here because there's some weirdness with sending interactive servers. I.e you wouldn't be able to run the server on your machine without having the r scripts in the same directory and having shiny installed. I can resolve this for the class by hosting the server on shinyapps.io 
+
 
 ```{r,echo=FALSE, eval=FALSE}
 library(shiny)
@@ -129,11 +135,13 @@ shinyAppFile("sincos_shinyapp.R")
 
 ```
 
-The cross correlation function reaches its maximum at a delay of $3\pi/2$, when the two functions are identical. I.e $sin(x)=cos(x-3\pi/2)$. 
+The cross correlation function reaches its maximum at a delay of $3\pi/2$, when the two functions are identical. I.e $sin(x-3\pi/2)=cos(x)$. 
 
 We can plot our continuum and emission light curves with a delay and find the lag time with the maximum cross correlation function value. However, we have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
 
 $$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
+
+@White_1994
 
 This method assumes evenly sampled time data, which is nearly impossible to achieve, so we can interpolate our light curves onto evenly sampled time intervals. 
 
@@ -151,7 +159,7 @@ $$R=\tau c$$
 ### Real Data
 
 
-Let's look at some continuum and emission light curves. This data was reported in Grier et al 2012 ApJ 755 60.
+Let's look at some continuum and emission light curves. This data was reported in @Grier_2012.
 
 
 ```{r}
@@ -273,7 +281,7 @@ Now let's apply it to our light curves
 ```{r}
 obj=CCF(Fc_interp,FHb_interp,xout,30)
 plot(obj$lags,obj$CCF,xlab='lag (days)',ylab='CCF')
-lines(c(15.5,15.5),c(0,1))
+lines(c(15,15),c(0,1))
 ```
 
 
@@ -292,7 +300,7 @@ shinyAppFile("lagplot_shinyapp.R")
 ```
 
 
-Our final broad line region radius for this data is roughly 15 light days. This is pretty consistent with the values reported in Grier et al. 2012 for Mrk 335. 
+Our final broad line region radius for this data is roughly 15 light days. This is pretty consistent with the values reported in @Grier_2012 for Mrk 335. 
 
 ## Constraining the Velocity
 
@@ -458,7 +466,7 @@ ggplot()+
 
 ```
 
-So our estimate of $\sigma$ is 1.01. From this we can extract the velocity with
+So our estimate of $\sigma$ is 1.01. From this we can extract the velocity width
 
 $$FWHM (km/s)=\frac{c*2.355\sigma}{\lambda}$$
 
@@ -470,7 +478,7 @@ FWHM
 ```
 
 
-So a representational velocity is 1468 km/s, this is also comparable to reported values
+So a representational velocity is 1468 km/s, this is also comparable to reported values (@Grier_2012).
 
 ## Calculating the Mass of the Black Hole
 
@@ -489,18 +497,19 @@ Mbh=(4.3*15*lightdays_to_km*1468^2)/(6.674e-11*m_to_km^3)*kg_to_Msun
 Mbh
 ```
 
-$M_{BH}=27x10^6$ is within the uncertainty presented in Grier et al. 2012.
+$M_{BH}=27x10^6$ is within the uncertainty presented in @Grier_2012.
 
 
 # Black Hole Masses
 
-The AGN black hole mass database has compiled all published spectroscopic reverberation mapping studies of active galaxies
+The AGN black hole mass database has compiled all published spectroscopic reverberation mapping studies of active galaxies, they have currently published 62 black hole masses
 
 
 ```{r}
 mbh=read.csv("MBH_edit.csv",sep=",",header=F)
 colnames(mbh)=c("Name","RA","Dec","redshift","logMBH","+elogMBH","-elogMBH")
 head(mbh)
+
 ```
 
 
@@ -577,16 +586,9 @@ shinyApp(
 
 
 
-## Questions to Ponder
 
-Consider using this notebook as a means of answering these questions for yourself.
 
-1. Would we be able to perform our analysis for a quasar that was 100 times brighter? How long might the lag be?
-
-2. 
-
-...
-
+# References
 
 
 

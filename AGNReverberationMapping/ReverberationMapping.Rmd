@@ -6,7 +6,6 @@ output:
   html_document:
     toc: yes
     toc_float: yes
-runtime: shiny
 
 
 ---
@@ -89,7 +88,11 @@ $$F_{CCF}(\tau)=\int_{-\infty}^{\infty}L(t)C(t-\tau)dt$$
 
 Let's examine the CCF for sin(x) and cos(x)
 
-```{r,echo=FALSE}
+![](./singif_screenshots/sinplots.gif){width=300,height=300px}
+
+NOTE: I've embedded a gif here because there's some weirdness with sending interactive servers. I.e you wouldn't be able to run the server on your machine without having the r scripts in the same directory and having shiny installed. I can resolve this for the class by hosting the server on shinyapps.io 
+
+```{r,echo=FALSE, eval=FALSE}
 library(shiny)
 
 shinyAppFile("sincos_shinyapp.R")
@@ -105,7 +108,7 @@ $$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]
 
 This method assumes evenly sampled time data, which is nearly impossible to achieve, so we can interpolate our light curves onto evenly sampled time intervals. 
 
-```{r,echo=FALSE}
+```{r,echo=FALSE, eval=FALSE}
 library(shiny)
 
 shinyAppFile("lagplot_shinyapp.R")
@@ -128,7 +131,7 @@ We determine the velocity dispersion of the broad line region by fitting a singl
 
 ## Constraining the radius
 
-Let's look at our data
+Let's look at some continuum and emission light curves.
 
 
 ```{r}

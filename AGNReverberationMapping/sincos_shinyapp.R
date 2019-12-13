@@ -1,6 +1,47 @@
 library(shiny)
 library(ggplot2)
 
+
+CCF<-function(C,L,x,lagmax){
+  
+  num_lags=lagmax #moving in intervals of 1
+  N=length(C)
+  
+  sigmaC=sd(C)
+  sigmaL=sd(L)
+  Cbar=mean(C)
+  Lbar=mean(L)
+  
+  ccf_out=c()
+  lags=c()
+  
+  
+  for(tau in 1:lagmax){
+    
+    
+    count=0 #for normalization
+    sum=0
+    
+    for(i in lagmax:N){ #we have to cut off early values so C(t_i-tau) makes sense
+      
+      count=count+1
+      
+      val=(L[i]-Lbar)*(C[i-tau]-Cbar)/(sigmaC*sigmaL) #discrete ccf for one i value
+      
+      sum=sum+val
+    }
+    
+    ccf_out=append(ccf_out,sum/count)
+    lags=append(lags,x[tau]-x[1])
+    
+  }
+  
+  lags=head(lags,-1)
+  
+  return(list(lags=lags,CCF=ccf_out))
+  
+}
+
 ui <- fluidPage(
   
   # App title 
@@ -59,26 +100,17 @@ server <- function(input,output){
     
     x=seq(-2*pi,2*pi,length.out=50)
     
-    vals=ccf(sin(x),cos(x),plot=F)
+    obj=CCF(sin(x),cos(x),x,40)
     
-    ccfs=vals$acf
-    lags=vals$lag
-    
+    ccf=obj$CCF
+    lags=obj$lags
     t=input$tau
     
-    ccf_interp=approx(x=lags,y=ccfs,xout=t)
+    ccf_interp=approx(x=lags,y=ccf,xout=t)
     
-    
-    
-    plot(c(t,t),c(0,ccf_interp$y),
-         type='l',
-         xlab="lag",
-         ylab="CCF",
-         xlim=c(0,2*pi),
-         ylim=c(-1,1)
-         )
-    #lines(lags,ccfs)
-    lines(c(-2*pi,2*pi),c(0,0))
+    plot(lags,ccf,type='l',xlab='lag',ylab='CCF',xlim=c(0,2*pi),ylim=c(-1,1))
+    lines(c(t,t),c(0,ccf_interp$y))
+    lines(c(0,2*pi),c(0,0))
     
     
   })

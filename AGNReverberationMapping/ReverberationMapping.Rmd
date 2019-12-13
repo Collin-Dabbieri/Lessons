@@ -16,9 +16,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-# Theory
 
-## Background Info
+
+# Background Info
 
 Quasars are the most luminous objects in the universe. They're so bright that we can observe light from quasars that was emitted over 10 billion years ago. Quasars form when a supermassive black hole at the center of a galaxy draws gas from its host forming a disk that accretes onto the black hole. This disk emits thermal radiation that outshines the entire host galaxy. A diagram is given below.
 
@@ -29,7 +29,7 @@ The continuum light from the accretion disk emits like the sum of many blackbodi
 ![Quasar Spectrum](./Emission_Spectrum.png){width=300, height=400px}
 
 
-## Galaxy Feedback
+# Galaxy Feedback
 
 There's a well-known correlation between the mass of a galaxy's spheroidal component and the mass of the supermassive black hole at its center. For an elliptical galaxy, the spheroid is the whole galaxy, and for a spiral galaxy the spheroid is the central bulge. A plot illustrating this correlation is given below
 
@@ -38,7 +38,7 @@ There's a well-known correlation between the mass of a galaxy's spheroidal compo
 
 This is known as the M-$\sigma$ relation. The x-axis is the host galaxy's velocity dispersion, an analogue for its mass. The y-axis is the mass of the supermassive black hole at the center of the host galaxy. This correlation implies some coevolution mechanism between the supermassive black hole and its host galaxy. The source of this mechanism is an important area of active research.
 
-## Reverberation Mapping
+# Reverberation Mapping
 
 One of the ways we can constrain the mass of the supermassive black hole is through AGN reverberation mapping. Because gas in the broad line region orbits the black hole with keplerian velocities, we can use properties of the broad line region to constrain the black hole mass. To achieve this we need to calculate two things, a characteristic radius of the broad line region, and the velocity dispersion of the gas at that radius. If we can constrain these two values, our supermassive black hole mass can be given by the following equation.
 
@@ -119,31 +119,22 @@ Once we've used the cross correlation function to pick out our ideal lag time, w
 
 $$R=\tau c$$
 
-## Constraining the Velocity
-
-We determine the velocity dispersion of the broad line region by fitting a single-epoch emission line for its velocity width. It's important to remember that we must use the same emission line that we used to constrain the radius, so we're probing the same region of the gas in the broad line region. Often these values are measured with the H$\beta$ emission line.
+### Real Data
 
 
-
-
-
-# Computation
-
-## Constraining the radius
-
-Let's look at some continuum and emission light curves.
+Let's look at some continuum and emission light curves. This data was reported in Grier et al 2012 ApJ 755 60.
 
 
 ```{r}
-Continuum=read.table("Continuum.txt")
-colnames(Continuum)=c("HJD","Obs","Flux","eFlux")
+Continuum=read.table("Mrk335_Continuum.txt")
+colnames(Continuum)=c("HJD","Flux")
 head(Continuum)
 ```
 
 
 ```{r}
-Emission=read.table("Emission.txt")
-colnames(Emission)=c("HJD","FHb","eFHb","FHeII","eFHeII")
+Emission=read.table("Mrk335_Emission.txt")
+colnames(Emission)=c("HJD","FHb")
 head(Emission)
 ```
 
@@ -169,38 +160,32 @@ ggplot()+
 Now we can interpolate onto evenly sampled time bins
 
 ```{r}
-xL=seq(min(Emission$HJD),max(Emission$HJD),length.out=length(Emission$HJD))
-xC=seq(min(Continuum$HJD),max(Continuum$HJD),length.out=length(Continuum$HJD))
-temp=approx(Emission$HJD,normalize(Emission$FHb),xL)
-FHb_interp=temp$y
-temp=approx(Continuum$HJD,normalize(Continuum$Flux),xC)
-Fc_interp=temp$y
+xout=seq(min(Emission$HJD),max(Emission$HJD),length.out=length(Emission$HJD)) #pick evenly sampled x values
+
+temp=approx(Emission$HJD,Emission$FHb,xout) #interpolate emission light curve onto those values
+temp=temp$y
+FHb_interp=normalize(temp)
+
+temp=approx(Continuum$HJD,Continuum$Flux,xout) #interpolate continuum light curve onto those values
+temp=temp$y
+Fc_interp=normalize(temp)
 
 ggplot()+
-  geom_line(aes(xC,Fc_interp))+
-  geom_line(aes(xL,FHb_interp))
+  geom_line(aes(xout,Fc_interp))+
+  geom_line(aes(xout,FHb_interp))
 ```
 
-
-Let's plot our continuum and emission light curves with variable lag value
-
-```{r,echo=FALSE}
-library(shiny)
-
-shinyAppFile("lagplot_shinyapp.R")
-
-```
 
 Now let's make a method for calculating the discrete cross correlation function
 
 $$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
 
 
-```{r,echo=F,eval=F}
+```{r}
 
-CCF<-function(C,L,lagmax){
+CCF<-function(C,L,x,lagmax){
   
-  num_lags=lagmax
+  num_lags=lagmax #moving in intervals of 1
   N=length(C)
 
   sigmaC=sd(C)
@@ -210,43 +195,77 @@ CCF<-function(C,L,lagmax){
   
   ccf_out=c()
   lags=c()
+  
+
   for(tau in 1:lagmax){
     
-
     
+    count=0 #for normalization
     sum=0
 
-    for(i in lagmax:N){
-      index=i-tau
-      #print(L[j])
-      #print(C[index])
-      val=(L[i]-Lbar)*(C[index]-Cbar)/(sigmaC*sigmaL)
-      #print(val)
-      sum=sum+val
-      #print(sum)
+    for(i in (tau+1):N){ #we have to cut off early values so C(t_i-tau) makes sense
       
+      count=count+1
+
+      val=(L[i]-Lbar)*(C[i-tau]-Cbar)/(sigmaC*sigmaL) #discrete ccf for one i value
+
+      sum=sum+val
     }
-    #print(sum)
-    ccf_out=append(ccf_out,sum)
-    lags=append(lags,tau)
     
-    
+
+    ccf_out=append(ccf_out,sum/count)
+    lags=append(lags,x[tau]-x[1])
+  
   }
+
   
   return(list(lags=lags,CCF=ccf_out))
   
 }
 
-obj=CCF(Fc_interp,FHb_interp,60)
-obj
 
-#plot(obj$lags,obj$CCF)
+```
+
+We can test this function on our sin and cos plot
+
+```{r}
+x=seq(-2*pi,2*pi,length.out=50)
+obj=CCF(sin(x),cos(x),x,40)
+
+plot(obj$lags,obj$CCF)
+```
+
+Again we see a peak at $3\pi/2$.
+
+Now let's apply it to our light curves
+
+```{r}
+obj=CCF(Fc_interp,FHb_interp,xout,30)
+plot(obj$lags,obj$CCF,xlab='lag (days)',ylab='CCF')
+lines(c(15.5,15.5),c(0,1))
+```
+
+
+Let's plot our continuum and emission light curves with variable lag value, along with the CCF
+
+
+
+![](./laggif_screenshots/lagplots.gif){width=300,height=300px}
+
+
+```{r,echo=FALSE, eval=FALSE}
+library(shiny)
+
+shinyAppFile("lagplot_shinyapp.R")
 
 ```
 
 
+Our final broad line region radius for this data is roughly 15 light days. This is pretty consistent with the values reported in Grier et al 2012 for Mrk 335. 
 
 ## Constraining the Velocity
+
+We determine the velocity dispersion of the broad line region by fitting a single-epoch emission line for its velocity width. It's important to remember that we must use the same emission line that we used to constrain the radius, so we're probing the same region of the gas in the broad line region. Often these values are measured with the H$\beta$ emission line.
 
 
 # Black Hole Masses
@@ -269,7 +288,7 @@ hist(mbh$logMBH)
 
 Use this template to develop your own interactive applications
 
-```{r}
+```{r,eval=FALSE}
 library(shiny)
 
 shinyApp(
@@ -329,6 +348,8 @@ shinyApp(
 )
 
 ```
+
+![](./templategif_screenshots/template.gif){width=300,height=300px}
 
 
 # Conclusions

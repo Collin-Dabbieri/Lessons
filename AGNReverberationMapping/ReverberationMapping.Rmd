@@ -478,7 +478,7 @@ Returning to our equation
 
 $$M_{BH}=\frac{<f>Rv^2}{G}$$
 
-The AGN black hole mass database (below) uses <f>=4.3. Therefore our black hole mass, in solar masses, is given by
+The AGN black hole mass database (below) uses $<f>=4.3$. Therefore our black hole mass, in solar masses, is given by
 
 
 ```{r}

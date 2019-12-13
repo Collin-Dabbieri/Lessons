@@ -108,7 +108,7 @@ server <- function(input,output){
     
     ccf_interp=approx(x=lags,y=ccf,xout=t)
     
-    plot(lags,ccf,type='l',xlab='lag',ylab='CCF',xlim=c(0,2*pi),ylim=c(-1,1))
+    plot(lags,ccf,type='l',xlab='lag (radians)',ylab='CCF',xlim=c(0,2*pi),ylim=c(-1,1))
     lines(c(t,t),c(0,ccf_interp$y))
     lines(c(0,2*pi),c(0,0))
     

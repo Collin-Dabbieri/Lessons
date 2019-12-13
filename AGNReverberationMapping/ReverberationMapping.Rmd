@@ -1,7 +1,6 @@
 ---
 title: "AGN Reverberation Mapping"
 author: "Collin Dabbieri"
-date: "12/9/2019"
 output: 
   html_document:
     toc: yes
@@ -14,8 +13,39 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Abstract
 
+There is a well-known strong correlation between the mass of a supermassive black hole and the velocity dispersion of its host galaxy’s bulge, known as the M-$\sigma$ relation. This can not be explained through a direct relationship as the radius of gravitational influence of the black hole is much smaller than the radius of the host galaxy’s bulge. This suggests that there is some other form of feedback between the supermassive black hole and its host galaxy. The source of this feedback is unknown and an area of much active research. One way that these black hole masses are calculated is through reverberation mapping techniques.
 
+The purpose of this computational exercise is to help students understand reverberation mapping. After completion of the project students will understand the purpose of a transfer function, they will be comfortable fitting reverberation mapping data with a time lag, and they will be comfortable fitting emission lines for their velocity width.
+
+The exercise begins with background information on reverberation mapping. Graphics are provided to instill visual understanding of a quasar’s accretion disk and broad line region. Continuum and Hβ light curves are provided, along with an interactive plotting tool that plots the continuum and emission light curves, as well as the cross correlation for different lag values. Once the time lag is extracted, the radius of the broad line region is determined. Next, students will use a spectral fitting tool to fit the rest frame optical spectrum to determine the Keplerian velocity. Once velocity and radius are determined, the black hole mass can be calculated.
+
+# Additional Information
+
+Abbreviated Title: Reverberation Mapping
+
+URL Reference: BLR
+
+Type: Exercise Set
+
+Course/Context: Astronomy/Astrophysics
+
+Course Level: First Year of College, Beyond First Year
+
+Author: Collin Dabbieri
+
+Email: cdabbieri@gmail.com
+
+# Learning Goals
+
+After the completion of this project, students should be able to:
+
+-Calculate the cross correlation function for unevenly sampled time series data
+
+-Fit an emission line to determine its velocity width
+
+-Determine black hole mass estimates for reverberation mapping data
 
 
 # Background Info
@@ -99,10 +129,9 @@ shinyAppFile("sincos_shinyapp.R")
 
 ```
 
-The cross correlation function reaches its maximum at a delay of $3\pi/2$, when the two functions are identical. Similarly, we can plot our continuum and emission light curves with a delay and find the lag time with the maximum cross correlation function value.
+The cross correlation function reaches its maximum at a delay of $3\pi/2$, when the two functions are identical. I.e $sin(x)=cos(x-3\pi/2)$. 
 
-
-However, we have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
+We can plot our continuum and emission light curves with a delay and find the lag time with the maximum cross correlation function value. However, we have light curves sampled at discrete times, so we need a discrete version of this cross correlation function.
 
 $$F_{CCF}(\tau)=\frac{1}{N}\sum_{i=i}^N\frac{[L(t_i)-\bar L][C(t_i-\tau)-\bar C]}{\sigma_C \sigma_L}$$
 
@@ -156,6 +185,8 @@ ggplot()+
   geom_line(aes(HJD,normalize(FHb)),data=Emission)
 ```
 
+
+It's clear visually that these two light curves show similar variability, with some time delay.
 
 Now we can interpolate onto evenly sampled time bins
 
@@ -232,7 +263,7 @@ We can test this function on our sin and cos plot
 x=seq(-2*pi,2*pi,length.out=50)
 obj=CCF(sin(x),cos(x),x,40)
 
-plot(obj$lags,obj$CCF)
+plot(obj$lags,obj$CCF,xlab='lag (radians)',ylab='CCF')
 ```
 
 Again we see a peak at $3\pi/2$.
@@ -261,11 +292,178 @@ shinyAppFile("lagplot_shinyapp.R")
 ```
 
 
-Our final broad line region radius for this data is roughly 15 light days. This is pretty consistent with the values reported in Grier et al 2012 for Mrk 335. 
+Our final broad line region radius for this data is roughly 15 light days. This is pretty consistent with the values reported in Grier et al. 2012 for Mrk 335. 
 
 ## Constraining the Velocity
 
 We determine the velocity dispersion of the broad line region by fitting a single-epoch emission line for its velocity width. It's important to remember that we must use the same emission line that we used to constrain the radius, so we're probing the same region of the gas in the broad line region. Often these values are measured with the H$\beta$ emission line.
+
+```{r,echo=FALSE}
+
+library(emdbook)
+
+#takes an array of WL values, and the params for the gaussian, outputs an array of intensities
+gauss<-function(WL, mean, sd){
+  ints=c()
+  for(i in 1:length(WL)){
+    
+    term1=1/(sd*sqrt(2*pi))
+    term2=exp(-0.5*((WL[i]-mean)/sd)^2)
+    
+    ints=append(ints,term1*term2)
+    
+  }
+  return(ints)
+}
+
+#takes arrays of WL and Flux, returns noise ~N(0,sqrt(Flux))
+noise<-function(WL,Flux){
+  err=c()
+  for(i in 1:length(WL)){
+    val=rnorm(1,0,0.01*Flux[i])
+    
+    err=append(err,val)
+  }
+  return(err)
+}
+
+lightspeed=3e8
+
+WL_Hbeta=4861.4
+sigma_Hbeta=1663 #km/s
+#delta v=c delta log lambda
+delta_log_lambda=(sigma_Hbeta/lightspeed)
+sigma_Hbeta_wl=exp(delta_log_lambda)
+A_Hbeta=5
+norm_true=9
+norm_WL=4840
+alpha_true=1.85
+
+WL=lseq(4800,4900,length.out=200)
+
+Exp_Flux=norm_true*(WL/norm_WL)^(-alpha_true)+A_Hbeta*gauss(WL,WL_Hbeta,sigma_Hbeta_wl)
+
+Flux=Exp_Flux+noise(WL,Exp_Flux)
+
+```
+
+
+```{r}
+plot(WL,Flux)
+```
+
+
+For a simple application, we can fit the emission line with a Gaussian profile (more accurately it should be a Voigt). Notice though that the baseline is well above 0. We mentioned before that the continuum flux is modelled as a power law, so we'll use that here. For a Gaussian
+
+$$f(\lambda,\sigma,\mu)=A\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}(\frac{\lambda-\mu}{\sigma})^2}$$
+
+Where $\lambda$ is the wavelength, A is the amplitude, $\mu$ is the mean and $\sigma$ is the standard deviation.
+
+And a power law is given by
+
+$$f(\lambda)=C(\frac{\lambda}{\lambda_0})^{-\alpha}$$
+
+Where C is the power law normalization and $\alpha$ is the power law slope. It's important to set $\lambda_0$ to a value that's within the band pass.
+
+So our best fit is just the power law plus a gaussian. Let's define these functions
+
+```{r}
+#takes an array of wavelength values, as well as the mean and standard deviation, outputs an array of intensities
+gauss<-function(WL,mu,sigma,A){
+  out=c()
+  for(i in 1:length(WL)){
+    
+    val=A*(sigma*sqrt(2*pi))^(-1)*exp(-0.5*((WL[i]-mu)/sigma)^2)
+    
+    
+    out=append(out,val)
+  }
+  
+  return(out)
+}
+```
+
+
+
+```{r}
+plot(WL,gauss(WL,4860,1,3))
+```
+
+
+```{r}
+#takes an array of wavelength values, as well as the powerlaw norm slope and lambda_0, outputs an array of intensities
+powerlaw<-function(WL,WL0,C,alpha){
+  
+  return( C*(WL/WL0)^(-alpha)  )
+  
+}
+```
+
+```{r}
+plot(powerlaw(WL,4840,9,1.4)+gauss(WL,4860,1,3))
+```
+
+
+Now we can try to match our model to the real data visually. We know H$\beta$ has a WL of 4861, so that's one less parameter to worry about.
+
+```{r}
+mu=4861
+A_guess=8
+sigma_guess=1.5
+WL0=4840
+C_guess=9
+alpha_guess=0.8
+
+model=powerlaw(WL,WL0,C_guess,alpha_guess)+gauss(WL,mu,sigma_guess,A_guess)
+
+
+ggplot()+
+  geom_point(aes(WL,Flux))+
+  geom_line(aes(WL,model))
+```
+
+Now let's utilize a non-linear least squares fit to the data, to get better estimates of fit parameters.
+
+```{r}
+#coeff is a vector of fit parameters
+WL0=4840
+mu=4861
+mod<-function(WL,coeff){
+  C_model=coeff[1]
+  alpha_model=coeff[2]
+  sigma_model=coeff[3]
+  A_model=coeff[4]
+  
+  powerlaw(WL,WL0,C_model,alpha_model)+gauss(WL,mu,sigma_model,A_model)
+  
+}
+
+
+obj=nls(Flux ~ mod(WL,coef), start = list(coef = c(C_guess,alpha_guess,sigma_guess,A_guess)))
+obj
+```
+
+Now we can plot the model fit
+
+```{r}
+
+coeff_nls=c(8.9905,-0.0539,1.0256,4.8840)
+
+ggplot()+
+  geom_point(aes(WL,Flux))+
+  geom_line(aes(WL,mod(WL,coeff_nls)))
+
+```
+
+So our estimate of $\sigma$ is 1.02. For data that is evenly sampled in log($\lambda$)
+
+$$\delta v =c \delta(log\lambda)$$
+
+```{r}
+sigma_v=3e8*log(1.02)
+sigma_v
+```
+
 
 
 # Black Hole Masses
@@ -350,9 +548,6 @@ shinyApp(
 ```
 
 ![](./templategif_screenshots/template.gif){width=300,height=300px}
-
-
-# Conclusions
 
 
 

@@ -300,6 +300,8 @@ We determine the velocity dispersion of the broad line region by fitting a singl
 
 ```{r,echo=FALSE}
 
+set.seed(5)
+
 library(emdbook)
 
 #takes an array of WL values, and the params for the gaussian, outputs an array of intensities
@@ -330,10 +332,10 @@ noise<-function(WL,Flux){
 lightspeed=3e8
 
 WL_Hbeta=4861.4
-sigma_Hbeta=1663 #km/s
+FWHM_Hbeta=1273 #km/s
 #delta v=c delta log lambda
-delta_log_lambda=(sigma_Hbeta/lightspeed)
-sigma_Hbeta_wl=exp(delta_log_lambda)
+sigma_Hbeta_wl=(FWHM_Hbeta*WL_Hbeta)/(3e6*2.355)
+
 A_Hbeta=5
 norm_true=9
 norm_WL=4840
@@ -407,6 +409,7 @@ plot(powerlaw(WL,4840,9,1.4)+gauss(WL,4860,1,3))
 Now we can try to match our model to the real data visually. We know H$\beta$ has a WL of 4861, so that's one less parameter to worry about.
 
 ```{r}
+library(ggplot2)
 mu=4861
 A_guess=8
 sigma_guess=1.5
@@ -447,7 +450,7 @@ Now we can plot the model fit
 
 ```{r}
 
-coeff_nls=c(8.9905,-0.0539,1.0256,4.8840)
+coeff_nls=c(9.001,1.841,1.010,5.044)
 
 ggplot()+
   geom_point(aes(WL,Flux))+
@@ -455,15 +458,38 @@ ggplot()+
 
 ```
 
-So our estimate of $\sigma$ is 1.02. For data that is evenly sampled in log($\lambda$)
+So our estimate of $\sigma$ is 1.01. From this we can extract the velocity with
 
-$$\delta v =c \delta(log\lambda)$$
+$$FWHM (km/s)=\frac{c*2.355\sigma}{\lambda}$$
+
+Where here $\lambda$ is the wavelength of the transition at zero velocity.
 
 ```{r}
-sigma_v=3e8*log(1.02)
-sigma_v
+FWHM=(3e6*2.355*1.01)/4861
+FWHM
 ```
 
+
+So a representational velocity is 1468 km/s, this is also comparable to reported values
+
+## Calculating the Mass of the Black Hole
+
+Returning to our equation
+
+$$M_{BH}=\frac{<f>Rv^2}{G}$$
+
+The AGN black hole mass database (below) uses <f>=4.3. Therefore our black hole mass, in solar masses, is given by
+
+
+```{r}
+lightdays_to_km=2.59e10
+m_to_km=1/1000
+kg_to_Msun=1/1.989e30
+Mbh=(4.3*15*lightdays_to_km*1468^2)/(6.674e-11*m_to_km^3)*kg_to_Msun
+Mbh
+```
+
+$M_{BH}=27x10^6$ is within the uncertainty presented in Grier et al. 2012.
 
 
 # Black Hole Masses

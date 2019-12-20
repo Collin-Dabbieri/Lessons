@@ -1,7 +1,6 @@
 ---
 title: "Multiple Linear Regression: an Introduction"
 author: "Collin Dabbieri"
-date: "12/9/2019"
 output: 
   html_document:
     toc: yes
@@ -53,21 +52,51 @@ There is some error in our response so the data points are not perfectly modelle
 
 $$y_i=(mx_i+b)+\epsilon_i$$
 
-Where m is the slope of our line of fit and b is the intercept. $mx_i+b$ gives the location of our model fit and $\epsilon_i$ gives the error
+Where m is the slope of our line of fit and b is the intercept. $mx_i+b$ gives the location of our model fit and $\epsilon_i$ gives the error.
+
+One of the assumptions of regression is that our error is normally distributed with mean 0 and constant variance.
+
 
 
 ```{r,echo=FALSE}
-plot(x1,y)
-lines(x1,yhat,type='l')
 
-for(i in 1:n){
-  x_val=x1[i]
-  y_model=betahat[2]*x_val+betahat[1]
-  y_true=y[i]
-  
-  lines(c(x_val,x_val),c(0,y_model),type='l',col='red')
-  lines(c(x_val+0.2,x_val+0.2),c(y_model,y_true),type='l',col='blue')
-}
+library(ggplot2)
+
+cols <- c("model"="red","error"="blue","line of best fit"="black")
+
+y=t(y)
+
+g=ggplot()
+g=g+geom_line(aes(x1,yhat,colour="line of best fit"))
+g=g+geom_point(aes(x1,y))
+
+g=g+geom_line(aes(c(x1[1],x1[1]),c(0,yhat[1]),colour='model'))
+g=g+geom_line(aes(c(x1[2],x1[2]),c(0,yhat[2]),colour='model'))
+g=g+geom_line(aes(c(x1[3],x1[3]),c(0,yhat[3]),colour='model'))
+g=g+geom_line(aes(c(x1[4],x1[4]),c(0,yhat[4]),colour='model'))
+g=g+geom_line(aes(c(x1[5],x1[5]),c(0,yhat[5]),colour='model'))
+g=g+geom_line(aes(c(x1[6],x1[6]),c(0,yhat[6]),colour='model'))
+g=g+geom_line(aes(c(x1[7],x1[7]),c(0,yhat[7]),colour='model'))
+g=g+geom_line(aes(c(x1[8],x1[8]),c(0,yhat[8]),colour='model'))
+g=g+geom_line(aes(c(x1[9],x1[9]),c(0,yhat[9]),colour='model'))
+g=g+geom_line(aes(c(x1[10],x1[10]),c(0,yhat[10]),colour='model'))
+
+g=g+geom_line(aes(c(x1[1],x1[1]),c(yhat[1],y[1]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[2],x1[2]),c(yhat[2],y[2]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[3],x1[3]),c(yhat[3],y[3]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[4],x1[4]),c(yhat[4],y[4]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[5],x1[5]),c(yhat[5],y[5]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[6],x1[6]),c(yhat[6],y[6]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[7],x1[7]),c(yhat[7],y[7]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[8],x1[8]),c(yhat[8],y[8]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[9],x1[9]),c(yhat[9],y[9]),colour='error',alpha=0.5))
+g=g+geom_line(aes(c(x1[10],x1[10]),c(yhat[10],y[10]),colour='error',alpha=0.5))
+
+g=g+guides(alpha=FALSE)
+
+g=g + scale_colour_manual(name="",values=cols)
+g
+
 ```
 
 Now in reality y, $x_1$, and $\epsilon$ are vectors with n values, we can express them as such
@@ -75,8 +104,8 @@ Now in reality y, $x_1$, and $\epsilon$ are vectors with n values, we can expres
 $$
 \begin{matrix}
 [ & y_1 & ] & & & [&x_{11}&]& & &[& 1 &]& &[&\epsilon_1&] \\
-[ & y_2 & ] & & & [&x_{12}&]& & &[& 1 &]& &[&\epsilon_2&] \\
-[ & ... & ] &=&m& [&  ... &]&+&b&[&...&]&+&[&...&] \\
+| & y_2 & | & & & |&x_{12}&|& & &|& 1 &|& &|&\epsilon_2&| \\
+| & ... & | &=&m& |&  ... &|&+&b&|&...&|&+&|&...&| \\
 [ & y_n & ] & & & [&x_{1n}&]& & &[& 1 &]& &[&\epsilon_n&] \\
 \end{matrix}
 $$
@@ -88,8 +117,8 @@ Now bear with me as I change some variables and move things around
 $$
 \begin{matrix}
 [ & y_1 & ] & & & [&1&]& & &[& x_{11} &]& &[&\epsilon_1&] \\
-[ & y_2 & ] & & & [&1&]& & &[& x_{12} &]& &[&\epsilon_2&] \\
-[ & ... & ] &=&\beta_0& [&  ... &]&+&\beta_1&[&...&]&+&[&...&] \\
+| & y_2 & |& & & |&1&|& & &|& x_{12} &|& &|&\epsilon_2&| \\
+| & ... & | &=&\beta_0& |&  ... &|&+&\beta_1&|&...&|&+&|&...&| \\
 [ & y_n & ] & & & [&1&]& & &[& x_{1n} &]& &[&\epsilon_n&] \\
 \end{matrix}
 $$
@@ -146,8 +175,197 @@ planes3d(normal[1],normal[2],normal[3],0,alpha=0.5,color="blue")
 rglwidget()
 ```
 
+Here our best fit for any point (x1,x2) is the plane given in purple, and our equation for that plane is
+
+$$
+\begin{matrix}
+[ & y_1 & ] & & & [&1&]& & &[& x_{11} &]& & &[&x_{21}&] & &[&\epsilon_1&] \\
+| & y_2 & |& & & |&1&|& & &|& x_{12} &|& & & |&x_{22}&|& &|&\epsilon_2&| \\
+| & ... & | &=&\beta_0& |&  ... &|&+&\beta_1&|&...&|&+& \beta_2&|&...&|&+ &|&...&| \\
+[ & y_n & ] & & & [&1&]& & &[& x_{1n} &] & & & [&x_{2n}&]& &[&\epsilon_n&] \\
+\end{matrix}
+$$
+
+We could see how we could generalize this for data with k independent variables
+
+
+$$
+\begin{matrix}
+[ & y_1 & ] & & & [&1&]& & &[& x_{11} &]& & &[&x_{21}&] & & & & &[&x_{k1}&] & &[&\epsilon_1&] \\
+| & y_2 & |& & & |&1&|& & &|& x_{12} &|& & & |&x_{22}&| & & & & &|&x_{k2}&|& &|&\epsilon_2&| \\
+| & ... & | &=&\beta_0& |&  ... &|&+&\beta_1&|&...&|&+& \beta_2&|&...&|&+&...&+&\beta_k&|&...&|&+ &|&...&| \\
+[ & y_n & ] & & & [&1&]& & &[& x_{1n} &] & & & [&x_{2n}&] & & & & & [&x_{kn}&]& &[&\epsilon_n&] \\
+\end{matrix}
+$$
+
+In trying to fit the data, the only thing we can manipulate is our $\beta$ parameters. That is to say, in modelling our response, we can only take linear combinations of our independent variables.
+
+We can represent this linear combination in terms of matrix multiplication.
+
+$$Y=X\beta+\epsilon$$
+
+Where X, known as the design matrix, has shape nx(k+1)
+
+$$
+\begin{matrix}
+ &  &[&1  &x_{11}&x_{12}&...&x_{1k}&]     \\
+ &  &|&1  &x_{21}&x_{22}&...&x_{2k}&|     \\
+ &X=&|&...&...   &...   &...&...   &|     \\
+ &  &[&1  &x_{n1}&x_{n2}&...&x_{nk}&]     \\
+\end{matrix}
+$$
+
+$\beta$ is an (k+1)x1 vector
+
+$$
+\begin{matrix}
+&       &[&\beta_0&]                \\
+&       &|&\beta_1&|                \\
+& \beta=&|&...    &|                \\
+&       &[&\beta_k&]                \\
+\end{matrix}
+$$
+
+We want to find a vector $\hat{\beta}$ that gives us the best approximation of the data, given the limitation that it must be a linear combination of the independent variables (or a matrix multiplication of the design matrix).
+
+$$\hat{Y}=X\hat{\beta}$$
+
+## Column Space of the Design Matrix
+
+Let's think about the column space of our design matrix. The column space of X, denoted col(X), is the set of all possible linear combinations of the column vectors of X. We can immediately see that both $\beta$, and $\hat{\beta}$ are in col(X). Notice that this is not the same as our plane of best fit for the case where k=2. In fact, the column space of X is actually an n-dimensional hyperplane.
+
+To explain this, let's imagine the case where n=3. In this case, Y must have shape 3x1. Let's say we have one independent variable.
+
+```{r,echo=FALSE}
+Y=matrix(c(4,9,20),nrow=3,ncol=1)
+X=matrix(c(1,1,1,2,4,6),nrow=3,ncol=2)
+Y
+X
+```
+
+
+Let's take some random linear combinations of X and plot them in 3 dimensions. Notice that any linear combination of X in this case will have shape 3x1. So any individual linear combination of X will give you a vector in the plane col(X)
+
+```{r,echo=FALSE}
+library(rgl)
+set.seed(2)
+rgl.clear()
+axes3d()
+for(i in 1:5){
+  c1=runif(1,min=-1,max=1)
+  c2=runif(1,min=-1,max=1)
+  C=matrix(c(c1,c2),nrow=2,ncol=1)
+  linear_combination=X%*%C # in R %*% represents matrix multiplication
+  arrow3d(c(0,0,0),t(linear_combination), col ="yellow") #random linear combination of the column vectors of X
+}
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+
+rglwidget()
+```
 
 
 
+Next we'll plot our vector Y along with col(X). But first let's think about where Y will live.
+
+$$Y=X\beta+\epsilon$$
+
+Because of the error term Y in general is not a linear combination of the column vectors of X. Therefore we would expect Y to be outside of col(X)
 
 
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+
+rglwidget()
+```
+
+So our vector $\hat{\beta}$ is the best approximation of Y given the restriction that it must be in the col(X). This is the same as saying $\hat{\beta}$ is a projection of Y onto col(X)
+
+
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+H=X%*%solve(t(X)%*%X)%*%t(X)
+
+
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+arrow3d(c(0,0,0),t(H%*%Y),col="red",s=0.2,type="rotation") #betahat (projection of Y onto column space of X)
+
+rglwidget()
+```
+
+In general 
+
+$$Y=X\beta+\epsilon$$
+
+Since $\hat{\beta}$ is the vector that best approximates Y, that means its corresponding $\epsilon$ vector will have the shortest length. I.e. it will be perpendicular to the column space of X, while also maintaining the above equation.
+
+$$Y=X\hat{\beta}+\hat{\epsilon}$$
+
+
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+H=X%*%solve(t(X)%*%X)%*%t(X)
+
+
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+arrow3d(c(0,0,0),t(H%*%Y),col="red",s=0.2,type="rotation") #betahat (projection of Y onto column space of X)
+arrow3d(t(H%*%Y),t(Y),col="green",s=0.2,type="rotation")#epsilonhat (perpendicular to col(X))
+
+rglwidget()
+```
+
+Now that we understand the column space of the design matrix, we are ready to derive an expression for $\hat{\beta}$
+
+## Estimate of Fit Parameters
+
+We can actually get $\hat{\beta}$ with simple matrix algebra.
+
+$$Y=X\hat{\beta}+\hat{\epsilon}$$
+
+$$Y-X\hat{\beta}=\hat{\epsilon}$$
+
+$$X'(Y-X\hat{\beta})=X'\hat{\epsilon}$$
+
+Where $'$ denotes the transpose.
+
+But, because we know that $\hat{\epsilon}$ is perpendicular to the column space of X, we know that $X'\hat{\epsilon}=0$
+
+$$X'(Y-X\hat{\beta})=0$$
+
+$$X'Y-X'X\hat{\beta}=0$$
+
+$$X'Y=X'X\hat{\beta}$$
+
+$$(X'X)^{-1}X'Y=(X'X)^{-1}X'X\hat{\beta}$$
+
+$$(X'X)^{-1}X'Y=I_{k+1}\hat{\beta}$$
+
+$$(X'X)^{-1}X'Y=\hat{\beta}$$
+
+
+Now we have $\hat{\beta}$ in terms of observables only.
+
+# The Hat Matrix
+
+We say that $\hat{Y}$ is a projection of Y onto the column space of X. We also know that $\hat{Y}=X\hat{\beta}=X(X'X)^{-1}X'Y$. In general, left multiplying $X(X'X)^{-1}X'$ will give you the projection onto col(X). We call this operation $H$, or the hat matrix.
+
+$$\hat{Y}=HY$$
+
+$$H=X(X'X)^{-1}X'$$
+
+
+
+Next we'll derive an estimate of the variance $s^2$

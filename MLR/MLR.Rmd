@@ -358,7 +358,7 @@ $$(X'X)^{-1}X'Y=\hat{\beta}$$
 
 Now we have $\hat{\beta}$ in terms of observables only.
 
-# The Hat Matrix
+## The Hat Matrix
 
 We say that $\hat{Y}$ is a projection of Y onto the column space of X. We also know that $\hat{Y}=X\hat{\beta}=X(X'X)^{-1}X'Y$. In general, left multiplying $X(X'X)^{-1}X'$ will give you the projection onto col(X). We call this operation $H$, or the hat matrix.
 
@@ -366,6 +366,53 @@ $$\hat{Y}=HY$$
 
 $$H=X(X'X)^{-1}X'$$
 
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+H=X%*%solve(t(X)%*%X)%*%t(X)
 
 
-Next we'll derive an estimate of the variance $s^2$
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+arrow3d(c(0,0,0),t(H%*%Y),col="red",s=0.2,type="rotation") #betahat (projection of Y onto column space of X)
+arrow3d(t(H%*%Y),t(Y),col="green",s=0.2,type="rotation")#epsilonhat (perpendicular to col(X))
+
+legend3d("topright", legend = c(expression(paste("X",hat(beta))),expression(hat(epsilon)),"Y"), pch = 16, col = rainbow(3), cex=1, inset=c(0.02))
+
+rglwidget()
+```
+
+
+
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+H=X%*%solve(t(X)%*%X)%*%t(X)
+
+
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+arrow3d(c(0,0,0),t(H%*%Y),col="red",s=0.2,type="rotation") #betahat (projection of Y onto column space of X)
+arrow3d(t(H%*%Y),t(Y),col="green",s=0.2,type="rotation")#epsilonhat (perpendicular to col(X))
+
+legend3d("topright", legend = c("HY",expression(hat(epsilon)),"Y"), pch = 16, col = rainbow(3), cex=1, inset=c(0.02))
+
+rglwidget()
+```
+
+
+Next we'll find an expression for $s^2$, an estimate of the variance.
+
+## Estimate of the Variance
+
+
+
+
+
+
+
+

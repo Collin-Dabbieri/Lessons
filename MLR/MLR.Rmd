@@ -12,8 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Motivation
-
 
 # Simple Linear Regression
 
@@ -125,9 +123,9 @@ $$
 
 All we've done is changed b to $\beta_0$, changed m to $\beta_1$, and switched their order. This form can be easily generalized to the case with multiple independent variables predicting the response y.
 
-# MLR
+# Multiple Linear Regression
 
-## Basics
+
 
 Lets look at a situation where we have 2 independent variables, $x_1$ and $x_2$ predicting the response, y
 
@@ -329,7 +327,7 @@ rglwidget()
 
 Now that we understand the column space of the design matrix, we are ready to derive an expression for $\hat{\beta}$
 
-## Estimate of Fit Parameters
+## Estimate of Fit Vector
 
 We can actually get $\hat{\beta}$ with simple matrix algebra.
 
@@ -365,6 +363,7 @@ We say that $\hat{Y}$ is a projection of Y onto the column space of X. We also k
 $$\hat{Y}=HY$$
 
 $$H=X(X'X)^{-1}X'$$
+
 
 ```{r,echo=FALSE}
 library(rgl)
@@ -404,14 +403,225 @@ legend3d("topright", legend = c("HY",expression(hat(epsilon)),"Y"), pch = 16, co
 rglwidget()
 ```
 
+Because it will be useful later, let's prove that H is symmetric and idempotent
+
+### H is Symmetric
+
+We need to show $H'=H$
+
+$$H'=[X(X'X)^{-1}X']'=X(X(X'X)^{-1})'=X((X'X)^{-1})'X'$$
+
+Another identity is that $(A^{-1})'=(A')^{-1}$
+
+$$H'=X((X'X)')^{-1}X'=X(X'X)^{-1}X'=H$$
+
+### H is Idempotent
+
+We need to show $H^2=H$, using $A^{-1}A=I$
+
+$$H^2=HH=X(X'X)^{-1}X'X(X'X)^{-1}X'=X(X'X)^{-1}X'=H$$
+
+
+
+
+
 
 Next we'll find an expression for $s^2$, an estimate of the variance.
 
 ## Estimate of the Variance
 
+Finding an estimate for the variance is a bit more complicated than finding $\hat{\beta}$. We'll need to start with the residual sum of squares (which we'll denote SSE)
+
+$$SSE=\sum_{i=1}^nr_i^2$$
+
+Where $r_i$ is the data minus the model at any given point.
+
+We can see intuitively how this statistic could be useful, as it tells us how well the model approximates the data. The residuals are squared to account for the fact that the model could either under- or over-approximate the data at a given point.
+
+
+Returning to our diagram below
+
+```{r,echo=FALSE}
+library(rgl)
+rgl.clear()
+axes3d()
+
+H=X%*%solve(t(X)%*%X)%*%t(X)
+
+
+planes3d(-6,12,-6,0,alpha=0.5,color="red") #column space of x (planes3d asks for the normal vector)
+arrow3d(c(0,0,0),t(Y), col ="blue",s=0.2,type="rotation") # Y
+arrow3d(c(0,0,0),t(H%*%Y),col="red",s=0.2,type="rotation") #betahat (projection of Y onto column space of X)
+arrow3d(t(H%*%Y),t(Y),col="green",s=0.2,type="rotation")#epsilonhat (perpendicular to col(X))
+
+legend3d("topright", legend = c("HY",expression(hat(epsilon)),"Y"), pch = 16, col = rainbow(3), cex=1, inset=c(0.02))
+
+rglwidget()
+```
+
+
+We can see how $\hat{\epsilon}$ is related to the residual. By $\hat{\epsilon}=Y-X\hat{\beta}$ we can see that $\hat{\epsilon}$ is just the vector form of the residuals. So we might think the following equation makes sense
+
+$$SSE=\hat{\epsilon}^2$$
+
+But that doesn't quite make sense as we'd be multiplying 2 vectors of shape nx1, which is impossible. Instead we say
+
+$$SSE=\hat{\epsilon}'\hat{\epsilon}$$
+
+### Calculating SSE
+
+As an aside, let's determine an easy way of calculating the residual sum of squares.
+
+$$SSE=\hat{\epsilon}'\hat{\epsilon}$$
+
+from our diagram above, $\hat{\epsilon}=Y-HY$
+
+$$SSE=(Y-HY)'(Y-HY)$$
+
+Using the identity $(AB)'=B'A'$
+
+$$SSE=(Y'-Y'H')(Y-HY)$$
+
+$$SSE=Y'Y-Y'HY-Y'H'Y+Y'H'HY$$
+
+Because H is both symmetric and idempotent
+
+$$SSE=Y'Y-Y'HY$$
+
+$$SSE=Y'(I-H)Y$$
+
+Since these are all observables (or products of observables) we can calculate this directly.
 
 
 
+Returning now to our attempt to find an estimator of the variance, let's portray $\hat{\epsilon}$ in a different way, using our diagram above.
+
+$$\hat{\epsilon}=Y-HY$$
+
+We know, in general, that $Y=X\beta+\epsilon$
+
+$$\hat{\epsilon}=(X\beta+\epsilon)-H(X\beta+\epsilon)$$
+
+$$\hat{\epsilon}=X\beta+\epsilon-HX\beta-H\epsilon$$
+
+As an aside really quick we'll prove that $HX=X$, using $A^{-1}A=I$, assuming A is invertible
+
+$$HX=X(X'X)^{-1}X'X=X$$
+
+Therefore
+
+$$\hat{\epsilon}=X\beta+\epsilon-X\beta-H\epsilon$$
+
+$$\hat{\epsilon}=\epsilon-H\epsilon$$
+
+$$\hat{\epsilon}=(I-H)\epsilon$$
+
+Now we can return to our residual sum of squares
+
+
+$$SSE=\hat{\epsilon}'\hat{\epsilon}$$
+
+$$SSE=[(I-H)\epsilon]'(I-H)\epsilon$$
+
+$$SSE=\epsilon'(I-H)'(I-H)\epsilon$$
+
+To get this in the form we want, we'll also have to prove that (I-H) is both symmetric and idempotent.
+
+### (I-H) is Symmetric and Idempotent
+
+$$(I-H)'=I'-H'=I-H$$
+Since H is symmetric
+
+$$(I-H)^2=(I-H)(I-H)=I-H-H+H^2=I-H$$
+Since H is idempotent.
+
+So finally we can express our residual sum of squares as 
+
+$$SSE=\epsilon'(I-H)\epsilon$$
+
+To work on this further we'll need to understand spectral decomposition
+
+### Spectral Decomposition Theorem
+
+If you need a refresher on this or any of the other linear algebra discussed here, honestly 3Blue1Brown's YouTube series Essence of Linear Algebra is an excellent resource for a refresher. Chapter 14 talks about eigenvectors and eigenvalues. I'll give a short review below.
+
+For a matrix A, the eigenvectors ($\vec{e}$) and eigenvalues ($\lambda$) are any values which make the following true
+
+$$A\vec{e}=\lambda\vec{e}$$
+
+
+You can express any symmetric square matrix, M, as the sum of orthonormal basis vectors
+
+$$M=\sum_{i=1}^n \lambda_i e_ie_i'$$
+
+Where $\lambda_i$ are eigenvalues and $e_i$ are eigenvectors of M. Because our basis vectors are orthonormal, we know that $e_ie_j=0$ for $i\neq j$ and $e_ie_i=1$
+
+Now if M is both symmetric and idempotent (like (I-H)), then all of the eigenvalues will be either 0 or 1, and the number of eigenvalues that are 1 are given by the trace of M.
+
+Let's apply this to the residual sum of squares
+
+$$SSE=\epsilon'(I-H)\epsilon$$
+
+We know that (I-H) is a symmetric square matrix
+
+$$SSE=\epsilon'(\sum_{i=1}^n\lambda_ie_ie_i')\epsilon$$
+
+If we could calculate the trace of (I-H) we could pick out the eigenvalues that will not be 0 for our sum
+
+$$tr(I-H)=tr(I)-tr(H)$$
+
+We know that the trace of I is n, let's solve for the trace of H
+
+$$tr(H)=tr(X(X'X)^{-1}X')$$
+
+Using the identity $tr(AB)=tr(BA)$
+
+$$tr(H)=tr((X'X)^{-1}X'X)$$
+
+This will be equivalent to an identity matrix, but what is the shape of that matrix? Since X has shape nx(k+1), X'X will have shape (k+1)x(k+1), and $(X'X)^{-1}$ will also have shape (k+1)x(k+1). Therefore our identity matrix will have shape (k+1)x(k+1)
+
+$$tr(H)=tr(I_{k+1})=k+1$$
+
+$$tr(I-H)=n-(k+1)$$
+
+So $n-(k+1)$ of our eigenvalues will be 1, and the remainder will be zero, let's reflect that in the sum
+
+$$SSE=\epsilon'(\sum_{i=1}^{n-(k+1)}e_ie_i')\epsilon$$
+
+We can bring our $\epsilon$'s in the sum
+
+$$SSE=\sum_{i=1}^{n-(k+1)}\epsilon'e_ie_i'\epsilon$$
+
+We can simplify this using the identity $(AB)'=B'A'$, think of $\epsilon'e_i$ as $B'A'$
+
+$$\epsilon'e_ie_i'\epsilon=(e_i'\epsilon)'(e_i'\epsilon)=(e_i'\epsilon)^2$$
+
+$$SSE=\sum_{i=1}^{n-(k+1)}(e_i'\epsilon)^2$$
+
+Now let's let $v_i=e_i'\epsilon$. Remember that $e_i$ are orthonormal basis vectors and our assumption that $\epsilon$ is distributed normal with mean 0 and constant variance $\sigma^2$. This assumption is why we wanted to get our residual sum of squares in terms of $\epsilon$ in the first place, because now we know that $v_i$ is distributed normal with mean 0 and variance $\sigma^2$!
+
+$$SSE=\sum_{i=1}^{n-(k+1)}v_i^2$$
+
+In order to make $v_i$ into a Z statistic we divide both sides by $\sigma^2$
+
+
+$$\frac{SSE}{\sigma^2}=\sum_{i=1}^{n-(k+1)}(\frac{v_i}{\sigma})^2$$
+
+$$\frac{SSE}{\sigma^2}=\sum_{i=1}^{n-(k+1)}z_i^2$$
+
+Now the sum from i=1 to n-(k+1) of independent $z^2$s has a $\chi^2$ distribution with n-(k+1) degrees of freedom.
+
+$$\frac{SSE}{\sigma^2}=\chi^2_{n-(k+1)}$$
+
+$$\sigma^2=\frac{SSE}{\chi^2_{n-(k+1)}}$$
+
+To get an estimator for $\sigma^2$, which we'll call $s^2$ we take the expected value
+
+$$E(\sigma^2)=E(\frac{SSE}{\chi^2_{n-(k+1)}})$$
+
+$$s^2=\frac{SSE}{n-(k+1)}$$
+
+There we have it! And since we have a way of calculating SSE in terms of observables we can easily find $s^2$.
 
 
 

@@ -237,6 +237,11 @@ To explain this, let's imagine the case where n=3. In this case, Y must have sha
 ```{r,echo=FALSE}
 Y=matrix(c(4,9,20),nrow=3,ncol=1)
 X=matrix(c(1,1,1,2,4,6),nrow=3,ncol=2)
+rownames(Y)=c("","","")
+colnames(Y)="Y"
+
+colnames(X)=c("","X")
+rownames(X)=c("","","")
 Y
 X
 ```

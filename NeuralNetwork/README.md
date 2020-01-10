@@ -1,0 +1,1 @@
+This lesson will go over the basics of how a Neural Network works in a Jupyter Notebook. We'll write our own Neural Network from scratch for classifying the images dataset.
